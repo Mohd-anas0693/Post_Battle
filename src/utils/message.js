@@ -11,6 +11,8 @@ module.exports = {
     SucessMessage: {
         register: "Successfully registered user!",
         login: "login Successfull !",
-        update: "Successfully updated data!"
+        update: "Successfully updated data!",
+        logout: "Successfully logged out!",
+        getData: "Suceessfully retrived data!"
     }
 }

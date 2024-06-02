@@ -22,11 +22,14 @@ const generateRefreshAndAccessToken = async (userId) => {
 module.exports = {
 
     register: asyncHandler(async (req, res) => {
+        console.log(req)
         const { username, email, password } = req.body;
-        if ([username, email, password].some((fileds) => { fileds?.trim == "" })) {
+        console.log("body" + req.body);
+        if ([username, email, password].some((fileds) => { fileds?.trim() == "" })) {
             throw new ApiErrors(400, ErrorMessage.missingFields);
         }
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        console.log("exsiting User" + existingUser);
         if (existingUser) {
             throw new ApiErrors(404, ErrorMessage.noUserFound)
         }
@@ -35,6 +38,7 @@ module.exports = {
             email,
             password,
         })
+        console.log("user" + user)
 
         const checkUserExist = await User.findById(user._id).select("-password -refreshToken");
         if (!checkUserExist) throw new ApiErrors(500, ErrorMessage.somethingWrong)
@@ -67,6 +71,7 @@ module.exports = {
             .cookie("refreshToken", refreshToken, option)
             .json(new ApiResponse(200, { loggedInUser }, SucessMessage.login));
     }),
+
     fillUserDetails: asyncHandler(async (req, res) => {
         const user = req.user;
         if (!user) {
@@ -90,15 +95,17 @@ module.exports = {
         if (!updatedUser) {
             throw new ApiErrors(401, ErrorMessage.noUserFound);
         };
-        return res.status(200).json(new ApiResponse(200, updatedUser, SucessMessage.update));
+        return res.status(200)
+            .json(new ApiResponse(200, updatedUser, SucessMessage.update));
     }),
+    // 
     changePassword: asyncHandler(async (req, res) => {
         const user = req.user;
         if (!user) {
             throw new ApiErrors(404, ErrorMessage.invalidToken);
         }
         const { currentPassword, newPassword } = req.body;
-        if ([currentPassword, newPassword].some((fileds) => { fileds?.trim() = "" })) {
+        if ([currentPassword, newPassword].some((fileds) => { fileds.trim() = "" })) {
             throw new ApiErrors(400, ErrorMessage.missingFields);
         }
         const checkPassword = await User.isPasswordCorrect(currentPassword);
@@ -106,14 +113,44 @@ module.exports = {
             throw new ApiErrors(401, ErrorMessage.incorrectPassword);
         }
         const { accessToken, refreshToken } = generateRefreshAndAccessToken(user?._id);
-        const updatedUser = await User.findByIdAndUpdate(user?._id, { password: password }, { new: true });
+        const updatedUser = await User.findByIdAndUpdate(user?._id, { password: password }, { new: true }).select(" -refreshToken -password");
         if (!updatedUser) {
             throw new ApiErrors(500, ErrorMessage.somethingWrong);
         }
         const option = { httpOnly: true, secure: true };
-        return res.status(200).cookie("accessToken", accessToken, option).cookie("refeshToken", refreshToken, option).json(200, SucessMessage.update);
-
+        return res.status(200)
+            .cookie("accessToken", accessToken, option)
+            .cookie("refeshToken", refreshToken, option)
+            .json(200, SucessMessage.update);
+        // 
     }),
-   
+    // 
+    logout: asyncHandler(async (req, res) => {
+        const user = req.user;
+        if (!user) {
+            throw new ApiErrors(400, ErrorMessage.invalidToken);
+        };
+        const updatedUser = await User.findByIdAndUpdate(user?._id, { refreshToken: "" }, { new: true });
+        if (!updatedUser) {
+            throw new ApiErrors(401, ErrorMessage.noUserFound);
+        }
+        const option = { httpOnly: true, secure: true };
+        return res.status(200)
+            .cookie('accessToken', option)
+            .cookie('refreshToken', option)
+            .json(new ApiResponse(200, SucessMessage.logout));
+    }),
 
+    getUserInfo: asyncHandler(async (req, res) => {
+        const user = req.user;
+        if (!user) {
+            throw new ApiErrors(401, ErrorMessage.invalidToken);
+        }
+        const userData = await User.findById(user?._id).select(" -refreshToken -password");
+        if (!userData) {
+            throw new ApiErrors(400, ErrorMessage.noUserFound);
+        }
+        return res.status(200)
+            .json(new ApiResponse(200, userData, SucessMessage.getData));
+    })
 }
