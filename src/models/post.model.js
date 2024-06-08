@@ -13,6 +13,10 @@ const postSchema = new Schema({
         minlength: 5,
         maxlength: 500,
     },
+    isArchived: {
+        type: Boolean,
+        default: true,
+    },
     postImage: {
         type: String,
         required: true
@@ -38,7 +42,7 @@ const postSchema = new Schema({
         required: true
     },
     expireTime: {
-        type: String,
+        type: Date,
         required: true
     }
 
