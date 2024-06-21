@@ -9,8 +9,6 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const { InitialTime, VoteTime } = require('../constants')
 const { ErrorMessage, SucessMessage } = require('../utils/message');
-const Ledger = require('../models/ledger.model');
-
 module.exports = {
     createPost: asyncHandler(async (req, res) => {
         const user = await User.findById(req.user?._id).select('-password -refreshToken');
@@ -33,44 +31,44 @@ module.exports = {
         return res.status(200).json(new ApiResponse(200, "successfully created Post!"));
     }),
 
-        votePost: asyncHandler(async (req, res) => {
-            const post = req.post;
-            const user = req.user;
-            if (post?._id == undefined || "") {
-                throw new ApiError(500, ErrorMessage.noPostFound);
-            }
+    votePost: asyncHandler(async (req, res) => {
+        const post = req.post;
+        const user = req.user;
+        if (post?._id == undefined || "") {
+            throw new ApiError(500, ErrorMessage.noPostFound);
+        }
 
-            if (post.isArchived == true) {
-                throw new ApiError(400, ErrorMessage.noUpvote)
-            }
-            
-            if (user?._id == undefined || "") {
-                throw new ApiError(500, ErrorMessage.noUserFound)
-            }
-            const { userVote } = req.body;
+        if (post.isArchived == true) {
+            throw new ApiError(400, ErrorMessage.noUpvote)
+        }
 
-            let expireTime;
+        if (user?._id == undefined || "") {
+            throw new ApiError(500, ErrorMessage.noUserFound)
+        }
+        const { userVote } = req.body;
 
-            if (userVote == "upvote") {
-                expireTime = new Date(Date.now() + VoteTime * 60 * 1000);
-            }
-            if (userVote == "downvote") {
-                expireTime = new Date(Date.now() - VoteTime * 60 * 1000);
-            }
-            else {
-                throw new ApiError(404, ErrorMessage.invalidVoteEnum);
-            }
-            const updatedPost = await Post.findByIdAndUpdate(post?._id, { expireTime }, { new: true }).select('-password -refreshToken');
-            if (!updatedPost) {
-                throw new ApiError(500, ErrorMessage.somethingWrong);
-            }
-            const vote = await Vote.create({ postId: post?._id, votedBy: user?._id, voteType: userVote });
-            if (!vote) {
-                throw new ApiError(404, ErrorMessage.cannotVote);
-            }
-           
-            return res.status(200).json(new ApiResponse(200, SucessMessage.votePost));
-        }),
+        let expireTime;
+
+        if (userVote == "upvote") {
+            expireTime = new Date(Date.now() + VoteTime * 60 * 1000);
+        }
+        if (userVote == "downvote") {
+            expireTime = new Date(Date.now() - VoteTime * 60 * 1000);
+        }
+        else {
+            throw new ApiError(404, ErrorMessage.invalidVoteEnum);
+        }
+        const updatedPost = await Post.findByIdAndUpdate(post?._id, { expireTime }, { new: true }).select('-password -refreshToken');
+        if (!updatedPost) {
+            throw new ApiError(500, ErrorMessage.somethingWrong);
+        }
+        const vote = await Vote.create({ postId: post?._id, votedBy: user?._id, voteType: userVote });
+        if (!vote) {
+            throw new ApiError(404, ErrorMessage.cannotVote);
+        }
+
+        return res.status(200).json(new ApiResponse(200, SucessMessage.votePost));
+    }),
     getPostInfo: asyncHandler(async (req, res) => {
         const postId = req.post?._id;
         if (!postId) {
