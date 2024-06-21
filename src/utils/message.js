@@ -14,8 +14,9 @@ module.exports = {
         invalidVoteEnum: "Niether upvote nor downvote selected",
         cannotVote: "Not able vote something wrong!",
         invalidPostId: "invalid Post Id!",
-        legderAlreadyExist: "Ledger of this user already exist! ",
-        noLedgerFound: "No Ledger found!",
+        updateFail: "unable to update!",
+        transferFailed: "Oops! transfer failed!",
+        noEnoughBalance: "Not enough balance!"
     },
     SucessMessage: {
         register: "Successfully registered user!",
@@ -25,6 +26,7 @@ module.exports = {
         getData: "Suceessfully retrived data!",
         postCreated: "Sucessfully created post",
         votePost: "Successfully voted Post!",
-        ledgerCreation: "Sucessfully created New Ledger!"
+        ledgerCreation: "Sucessfully created New Ledger!",
+        transactionSuccess: "Sucessfully transfered token !",
     }
 }

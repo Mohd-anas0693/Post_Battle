@@ -44,6 +44,11 @@ const userSchema = new Schema({
         default: 0,
         min: 0
     },
+    tokenQuantity: {
+        type: Number,
+        default: 50,
+        min: 0
+    },
     password: {
         type: String,
         required: [true, "Password is required"],

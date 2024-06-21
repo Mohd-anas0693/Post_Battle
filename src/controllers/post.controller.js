@@ -32,6 +32,7 @@ module.exports = {
         console.log("post: ", post);
         return res.status(200).json(new ApiResponse(200, "successfully created Post!"));
     }),
+
         votePost: asyncHandler(async (req, res) => {
             const post = req.post;
             const user = req.user;
@@ -42,13 +43,11 @@ module.exports = {
             if (post.isArchived == true) {
                 throw new ApiError(400, ErrorMessage.noUpvote)
             }
+            
             if (user?._id == undefined || "") {
                 throw new ApiError(500, ErrorMessage.noUserFound)
             }
             const { userVote } = req.body;
-            const ledger = await Ledger.find({ owner: user?._id })
-
-            if (!ledger) throw new ApiError(400, ErrorMessage.noLedgerFound);
 
             let expireTime;
 
@@ -69,8 +68,7 @@ module.exports = {
             if (!vote) {
                 throw new ApiError(404, ErrorMessage.cannotVote);
             }
-            const updatedLedger = await Ledger.findByIdAndUpdate(ledger._id, { tokenQuantity: ledger.tokenQuantity - VoteTime }, { new: true });
-            
+           
             return res.status(200).json(new ApiResponse(200, SucessMessage.votePost));
         }),
     getPostInfo: asyncHandler(async (req, res) => {
