@@ -48,5 +48,6 @@ const postSchema = new Schema({
 
 }, { timestamps: true })
 
+
 const Post = model("post", postSchema);
 module.exports = Post 

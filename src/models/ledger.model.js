@@ -3,12 +3,13 @@ const { Schema, model } = require('mongoose');
 const ledgerSchema = new Schema({
     tokenQuantity: {
         type: Number,
-        required: true,
-        min: 0
+        default: 0,
     },
     owner: {
         type: Schema.Types.ObjectId,
-        refs: "users"
+        refs: "users",
+        unique: true,
+        required: true,
     }
 }, { timestamps: true });
 

@@ -1,9 +1,10 @@
 const User = require("../models/user.model");
+const Ledger = require("../models/ledger.model");
 const asyncHandler = require('../utils/asyncHandler');
 const ApiErrors = require('../utils/apiErrors');
 const ApiResponse = require('../utils/apiResponse');
 
-
+const { IntialTokenQuantity } = require('../constants');
 const { ErrorMessage, SucessMessage } = require('../utils/message');
 
 const generateRefreshAndAccessToken = async (userId) => {
@@ -19,7 +20,7 @@ const generateRefreshAndAccessToken = async (userId) => {
         throw new ApiErrors(500, error);
     }
 };
-
+ 
 module.exports = {
     register: asyncHandler(async (req, res) => {
         const { username, email, password } = req.body;
@@ -35,11 +36,14 @@ module.exports = {
             email,
             password,
         });
-        const checkUserExist = await User.findById(user._id).select("-password -refreshToken");
-        if (!checkUserExist) throw new ApiErrors(500, ErrorMessage.somethingWrong)
+        if (!user) throw new ApiErrors(500, ErrorMessage.somethingWrong)
+        const ledger = await Ledger.create({ tokenQuantity: IntialTokenQuantity, owner: user._id });
+        if (!ledger) {
+            throw new ApiErrors(500, ErrorMessage.somethingWrong);
+        }
         return res.status(201).json(new ApiResponse(200, checkUserExist, SucessMessage.register));
     }),
-
+   
     login: asyncHandler(async (req, res) => {
         const { userEmail, password } = req.body;
         if ([userEmail, password].some((fileds) => fileds == undefined || fileds?.trim() == "")) {
@@ -146,7 +150,7 @@ module.exports = {
             .cookie('refreshToken')
             .json(new ApiResponse(200, SucessMessage.logout));
     }),
-
+   
     getUserInfo: asyncHandler(async (req, res) => {
         const user = req.user;
         if (!user) {
@@ -158,5 +162,13 @@ module.exports = {
         }
         return res.status(200)
             .json(new ApiResponse(200, userData, SucessMessage.getData));
-    })
+    }),
+    
+    getAllUserPost: asyncHandler(async (req, res) => {
+        const userId = req.user?._id;
+        if (!userId) {
+            throw new ApiErrors(401, ErrorMessage.invalidToken);
+        }
+    }),
+     
 }

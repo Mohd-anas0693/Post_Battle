@@ -1,18 +1,16 @@
 const Post = require('../models/post.model');
 const User = require('..//models/user.model');
+const Vote = require('../models/vote.model');
 
 
-const postQueue = require('../queue/post.queue');
 const ApiError = require('../utils/apiErrors');
 const ApiResponse = require('../utils/apiResponse');
 const asyncHandler = require('../utils/asyncHandler');
+
+const { InitialTime, VoteTime } = require('../constants')
 const { ErrorMessage, SucessMessage } = require('../utils/message');
+const Ledger = require('../models/ledger.model');
 
-const initialTime = 5;
-
-// const decreaseTime = (time) => {
-//     return new Date(Date.now() - time * 60 * 1000);
-// }
 module.exports = {
     createPost: asyncHandler(async (req, res) => {
         const user = await User.findById(req.user?._id).select('-password -refreshToken');
@@ -24,21 +22,68 @@ module.exports = {
             throw new ApiError(200, ErrorMessage.emptyFields)
         }
 
-        const expireTime = new Date(Date.now() + initialTime * 60 * 1000);
+        const expireTime = new Date(Date.now() + InitialTime * 60 * 1000);
 
         const post = await Post.create({ postname, postDes, postImage, owner: user._id, expireTime });
-        console.log("post: ", post);
         if (!post) {
             throw new ApiError(400, " Now Abble to create post");
         }
         console.log(post.expireTime.getTime());
-        const delay = post.expireTime - Date.now();
-        console.log(delay)
-        console.log(postQueue)
-        postQueue.add({ postId: post._id }, { delay });
-        return res.status(200, post, "successfully created Post!")
+        console.log("post: ", post);
+        return res.status(200).json(new ApiResponse(200, "successfully created Post!"));
     }),
-    upvotePost: asyncHandler(async (req, res) => {
+        votePost: asyncHandler(async (req, res) => {
+            const post = req.post;
+            const user = req.user;
+            if (post?._id == undefined || "") {
+                throw new ApiError(500, ErrorMessage.noPostFound);
+            }
 
-    })
+            if (post.isArchived == true) {
+                throw new ApiError(400, ErrorMessage.noUpvote)
+            }
+            if (user?._id == undefined || "") {
+                throw new ApiError(500, ErrorMessage.noUserFound)
+            }
+            const { userVote } = req.body;
+            const ledger = await Ledger.find({ owner: user?._id })
+
+            if (!ledger) throw new ApiError(400, ErrorMessage.noLedgerFound);
+
+            let expireTime;
+
+            if (userVote == "upvote") {
+                expireTime = new Date(Date.now() + VoteTime * 60 * 1000);
+            }
+            if (userVote == "downvote") {
+                expireTime = new Date(Date.now() - VoteTime * 60 * 1000);
+            }
+            else {
+                throw new ApiError(404, ErrorMessage.invalidVoteEnum);
+            }
+            const updatedPost = await Post.findByIdAndUpdate(post?._id, { expireTime }, { new: true }).select('-password -refreshToken');
+            if (!updatedPost) {
+                throw new ApiError(500, ErrorMessage.somethingWrong);
+            }
+            const vote = await Vote.create({ postId: post?._id, votedBy: user?._id, voteType: userVote });
+            if (!vote) {
+                throw new ApiError(404, ErrorMessage.cannotVote);
+            }
+            const updatedLedger = await Ledger.findByIdAndUpdate(ledger._id, { tokenQuantity: ledger.tokenQuantity - VoteTime }, { new: true });
+            
+            return res.status(200).json(new ApiResponse(200, SucessMessage.votePost));
+        }),
+    getPostInfo: asyncHandler(async (req, res) => {
+        const postId = req.post?._id;
+        if (!postId) {
+            throw new ApiError(400, ErrorMessage.invalidPostId)
+        }
+        const post = await Post.findById(postId).select('-refreshToken -password');
+
+        if (!post) {
+            throw new ApiError(400, ErrorMessage.noPostFound);
+        }
+        return res.status(200).json(new ApiResponse(200, post, SucessMessage.getData));
+    }),
+
 }

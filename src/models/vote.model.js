@@ -13,7 +13,7 @@ const voteSchema = new Schema({
     },
     voteType: {
         type: String,
-        enum: ["upvote", "downvote"],
+        enum:  ["upvote", "downvote"],
         required: true,
 
     }
