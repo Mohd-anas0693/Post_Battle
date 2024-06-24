@@ -6,12 +6,13 @@ v2.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
 const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
-        const response = await v2.uploader.upload(localFilePath, { resource_type: auto });
+        const response = await v2.uploader.upload(localFilePath, { resource_type: "auto" });
         fs.unlinkSync(localFilePath);
-        return response;
+        return response.url;
     }
     catch (error) {
         fs.unlinkSync(localFilePath);

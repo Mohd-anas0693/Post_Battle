@@ -8,7 +8,6 @@ const verifyJWT = asyncHandler(async (req, _, next) => {
     if (!accessToken) {
         throw new ApiError(404, ErrorMessage.unauthorised);
     }
-    console.log(accessToken);
     const decodeToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY);
     const userId = decodeToken._id;
     const user = await User.findById(userId).select('-refreshToken -password');

@@ -36,7 +36,7 @@ module.exports = {
             password,
         });
         if (!user) throw new ApiErrors(500, ErrorMessage.somethingWrong)
-        return res.status(201).json(new ApiResponse(200, checkUserExist, SucessMessage.register));
+        return res.status(201).json(new ApiResponse(200, user, SucessMessage.register));
     }),
    
     login: asyncHandler(async (req, res) => {
