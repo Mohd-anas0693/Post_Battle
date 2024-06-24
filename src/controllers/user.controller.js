@@ -1,5 +1,4 @@
 const User = require("../models/user.model");
-const Ledger = require("../models/ledger.model");
 const asyncHandler = require('../utils/asyncHandler');
 const ApiErrors = require('../utils/apiErrors');
 const ApiResponse = require('../utils/apiResponse');
@@ -37,10 +36,6 @@ module.exports = {
             password,
         });
         if (!user) throw new ApiErrors(500, ErrorMessage.somethingWrong)
-        const ledger = await Ledger.create({ tokenQuantity: IntialTokenQuantity, owner: user._id });
-        if (!ledger) {
-            throw new ApiErrors(500, ErrorMessage.somethingWrong);
-        }
         return res.status(201).json(new ApiResponse(200, checkUserExist, SucessMessage.register));
     }),
    

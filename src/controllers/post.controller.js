@@ -7,28 +7,33 @@ const ApiError = require('../utils/apiErrors');
 const ApiResponse = require('../utils/apiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 
+const uploadOnCloudinary = require('../cloud/cloudinary');
 const { InitialTime, VoteTime } = require('../constants')
 const { ErrorMessage, SucessMessage } = require('../utils/message');
+
 module.exports = {
     createPost: asyncHandler(async (req, res) => {
         const user = await User.findById(req.user?._id).select('-password -refreshToken');
-        if (!user) {
-            throw new ApiError(400, ErrorMessage.noUserFound);
-        }
-        const { postname, postDes, postImage } = req.body;
-        if ([postname, postDes, postImage].some((fields) => fields == undefined || fields == "")) {
+        if (!user) throw new ApiError(400, ErrorMessage.noUserFound);
+
+        const { postname, postDes } = req.body;
+        if ([postname, postDes].some((fields) => fields == undefined || fields == "")) {
             throw new ApiError(200, ErrorMessage.emptyFields)
         }
 
+        const filepath = req.file?.path;
+        if (!filepath) throw new ApiError(400, ErrorMessage.pathNotFound);
+
+
+        const fileLink = await uploadOnCloudinary(filepath);
+        if (!fileLink) throw new ApiError(401, ErrorMessage.fileUploadFail);
+
         const expireTime = new Date(Date.now() + InitialTime * 60 * 1000);
 
-        const post = await Post.create({ postname, postDes, postImage, owner: user._id, expireTime });
-        if (!post) {
-            throw new ApiError(400, " Now Abble to create post");
-        }
-        console.log(post.expireTime.getTime());
-        console.log("post: ", post);
-        return res.status(200).json(new ApiResponse(200, "successfully created Post!"));
+        const post = await Post.create({ postname, postDes, postImage: fileLink, owner: user._id, expireTime });
+        if (!post) throw new ApiError(500, ErrorMessage.somethingWrong);
+        
+        return res.status(200).json(new ApiResponse(200, post, "successfully created Post!"));
     }),
 
     votePost: asyncHandler(async (req, res) => {

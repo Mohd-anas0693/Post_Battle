@@ -16,7 +16,9 @@ module.exports = {
         invalidPostId: "invalid Post Id!",
         updateFail: "unable to update!",
         transferFailed: "Oops! transfer failed!",
-        noEnoughBalance: "Not enough balance!"
+        noEnoughBalance: "Not enough balance!",
+        pathNotFound : "Error! No path found",
+        fileUploadFail :"Unable to upload file!",
     },
     SucessMessage: {
         register: "Successfully registered user!",
@@ -26,7 +28,6 @@ module.exports = {
         getData: "Suceessfully retrived data!",
         postCreated: "Sucessfully created post",
         votePost: "Successfully voted Post!",
-        ledgerCreation: "Sucessfully created New Ledger!",
         transactionSuccess: "Sucessfully transfered token !",
     }
 }
