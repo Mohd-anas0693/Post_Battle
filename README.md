@@ -22,7 +22,7 @@ PostBattle is a social media application where time is the essence. Each post st
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/yourusername/PostBattle.git
+   git clone https://github.com/Mohd-anas0693/Post_Battle.git
    cd PostBattle
 
    ```
